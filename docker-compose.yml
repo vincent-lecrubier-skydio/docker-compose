@@ -133,7 +133,7 @@ services:
     networks:
       - temporal-network
     ports:
-      - 3000:3000
+      - 8501:8501
 networks:
   temporal-network:
     driver: bridge
