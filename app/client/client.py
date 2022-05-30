@@ -1,27 +1,3 @@
-# import asyncio
-# import os
-
-# from temporalio.client import Client
-
-# from workflows import GreetingWorkflow, SayHelloWorkflow
-# from activities import create_greeting_activity, say_hello_activity
-
-
-# async def run_client():
-#     # Create client connected to server at the given address
-#     client = await Client.connect(os.environ.get('TEMPORAL_ENDPOINT')
-#                                   # , namespace="hello-namespace"
-#                                   )
-
-#     # Execute a workflow
-#     result = await client.execute_workflow(SayHelloWorkflow.run, "my name", id="hello-workflow-0", task_queue="hello-task-queue")
-
-#     print(f"Result: {result}")
-
-# if __name__ == "__main__":
-#     asyncio.run(run_client())
-
-
 import asyncio
 import os
 import streamlit as st
