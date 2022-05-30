@@ -1,0 +1,2 @@
+# git+https://github.com/crubier/sdk-python.git@1adbb675ecf4d4d39972904e53ed7d6ef8fd863d#egg=temporalio
+asyncio==3.4.3

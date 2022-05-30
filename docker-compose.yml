@@ -11,6 +11,11 @@ services:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
     image: elasticsearch:${ELASTICSEARCH_VERSION}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -u elastic:elastic -s -f elasticsearch:9200/_cat/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - temporal-network
     expose:
@@ -21,6 +26,11 @@ services:
       POSTGRES_PASSWORD: temporal
       POSTGRES_USER: temporal
     image: postgres:${POSTGRESQL_VERSION}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - temporal-network
     expose:
@@ -28,8 +38,10 @@ services:
   temporal:
     container_name: temporal
     depends_on:
-      - postgresql
-      - elasticsearch
+      postgresql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     environment:
       - DB=postgresql
       - DB_PORT=5432
@@ -41,6 +53,16 @@ services:
       - ES_SEEDS=elasticsearch
       - ES_VERSION=v7
     image: temporalio/auto-setup:${TEMPORAL_VERSION}
+    # healthcheck:
+    #   test: [ "CMD-SHELL", "tctl cluster health" ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    healthcheck:
+      test: [ "CMD-SHELL", "ping -c 5 127.0.0.1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - temporal-network
     ports:
@@ -50,7 +72,8 @@ services:
   temporal-admin-tools:
     container_name: temporal-admin-tools
     depends_on:
-      - temporal
+      temporal:
+        condition: service_healthy
     environment:
       - TEMPORAL_CLI_ADDRESS=temporal:7233
     image: temporalio/admin-tools:${TEMPORAL_VERSION}
@@ -58,10 +81,12 @@ services:
       - temporal-network
     stdin_open: true
     tty: true
+    command: "tctl name"
   temporal-ui:
     container_name: temporal-ui
     depends_on:
-      - temporal
+      temporal:
+        condition: service_healthy
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=http://localhost:3000
@@ -73,7 +98,8 @@ services:
   temporal-web:
     container_name: temporal-web
     depends_on:
-      - temporal
+      temporal:
+        condition: service_healthy
     environment:
       - TEMPORAL_GRPC_ENDPOINT=temporal:7233
       - TEMPORAL_PERMIT_WRITE_API=true
@@ -82,6 +108,32 @@ services:
       - temporal-network
     ports:
       - 8088:8088
+  worker:
+    build: 
+      context: ./app
+      dockerfile: ./worker/worker.dockerfile
+    depends_on:
+      temporal:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      - TEMPORAL_ENDPOINT=http://temporal:7233
+    networks:
+      - temporal-network
+  client:
+    build: 
+      context: ./app
+      dockerfile: ./client/client.dockerfile
+    depends_on:
+      temporal:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      - TEMPORAL_ENDPOINT=http://temporal:7233
+    networks:
+      - temporal-network
+    ports:
+      - 3000:3000
 networks:
   temporal-network:
     driver: bridge
