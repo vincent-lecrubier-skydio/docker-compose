@@ -2,9 +2,11 @@
 FROM python:3.10.4-bullseye
 WORKDIR /app
 
+# Install rust, required by temporalio
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
+# Install Python pakages, including temporalio
 RUN python -m pip install \
   streamlit==1.10.0 \
   asyncio==3.4.3 \
