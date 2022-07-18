@@ -1,5 +1,6 @@
 # Python docker compose temporal
 
+A simple example of use of the temporal Python SDK. See https://github.com/temporalio/sdk-python
 ## How to use
 
 1. Run the stack
