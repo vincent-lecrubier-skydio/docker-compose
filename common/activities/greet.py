@@ -7,5 +7,5 @@ class GreetingInfo:
     name: str = "<unknown>"
 
 @activity.defn
-async def create_greeting_activity(info: GreetingInfo) -> str:
+async def greet(info: GreetingInfo) -> str:
     return f"{info.salutation}, {info.name}!"
